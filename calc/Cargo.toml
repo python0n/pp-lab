@@ -1,0 +1,17 @@
+[package]
+name = "pp_lab"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+akatsuki-pp = { git = "https://github.com/osuAkatsuki/akatsuki-pp-rs", rev = "b96019f50aa7d09bcbde60016481a69df04315e4" }
+rosu-pp = "=4.0.1"
+rosu-pp-next = { package = "rosu-pp", git = "https://github.com/MaxOhn/rosu-pp", rev = "072ed255fa043aba495212c441030dc7a5e61469" }
+rosu-pp-older = { git = "https://github.com/MaxOhn/rosu-pp-older" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rayon = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

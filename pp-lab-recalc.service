@@ -1,0 +1,9 @@
+[Unit]
+Description=pp-lab: nocne przeliczenie wariantów pp
+
+[Service]
+Type=oneshot
+User=pplab
+WorkingDirectory=/opt/pp-lab
+ExecStart=/opt/pp-lab/venv/bin/python -m pplab.recalc --default
+Nice=10
