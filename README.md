@@ -10,7 +10,9 @@ pp calculator and pp rework lab for osu! private servers running
 - **Reworks** (needs the server's database): recalculates the server's scores with other pp formulas
   (current osu!, older osu! versions, proposals) and gives player rankings and top plays for each one.
 
-Used on [taksiegra](https://osu.taksiegra.ovh/pp). Polish notes: [README.pl.md](README.pl.md).
+**Demo:** https://osu.taksiegra.ovh/pp-lab/ - the page from this repository as it is, for trying it out.
+taksiegra's own calculator, built into its website, is at https://osu.taksiegra.ovh/pp.
+Polish notes: [README.pl.md](README.pl.md).
 
 ## Formulas
 
