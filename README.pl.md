@@ -3,6 +3,8 @@
 Następca PP Era Hypo. Przelicza wyniki serwera taksiegra innymi wzorami pp
 i udostępnia wyniki stronie `/reworks` w Shiinie.
 
+Demo strony z repo: https://osu.taksiegra.ovh/pp-lab/ (wersja poglądowa). Kalkulator taksiegra w stylu strony jest pod https://osu.taksiegra.ovh/pp.
+
 - `calc/` - kalkulator w Ruście (`pp_lab`). Warianty: `tsg` (dokładnie wzór serwera,
   akatsuki-pp), `osu_2026_07` (rosu-pp pp-update), `osu_2025_10` (rosu-pp 4.0)
   i stare ery osu!std z rosu-pp-older. `pp_lab --variants` wypisuje listę.
