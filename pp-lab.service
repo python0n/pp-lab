@@ -1,5 +1,5 @@
 [Unit]
-Description=pp-lab API (reworki pp dla Shiiny)
+Description=pp-lab API
 After=network.target
 
 [Service]

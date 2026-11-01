@@ -1,14 +1,14 @@
-"""Przeliczenie wyników serwera wybranym wzorem.
+"""Recalculates the server's scores with a chosen formula.
 
-    python -m pplab.recalc --variant osu_2026_07          # wszystkie tryby, które wariant obsługuje
+    python -m pplab.recalc --variant osu_2026_07          # every mode the variant supports
     python -m pplab.recalc --variant osu_2026_07 --mode 0
-    python -m pplab.recalc --all                           # każdy wariant z variants.json
-    python -m pplab.recalc --default                       # wzór serwera + warianty osu! (bez starych er)
+    python -m pplab.recalc --all                           # every variant from variants.json
+    python -m pplab.recalc --default                       # base formula + osu! variants (no old eras)
 
-Liczone są wszystkie zaliczone wyniki (status 1, 2, 3) graczy bez restrykcji
-na mapach rankingowych i zatwierdzonych, w trybach zwykłych (0-3).
-pp gracza: najlepszy wynik na każdej mapie, ważenie 0.95^n po wszystkich mapach
-i bonus 416.6667 * (1 - 0.9994^liczba_map), dokładnie jak w bancho.
+All passed scores (status 1, 2, 3) of unrestricted players on ranked and approved
+maps in the normal modes (0-3) are calculated.
+Player pp: best score on each map, weighted 0.95^n over all maps, plus the bonus
+416.6667 * (1 - 0.9994^map_count), exactly like bancho.
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def run_calc(variant: str, scores: list[dict]) -> list[dict]:
     payload = json.dumps({"variant": variant, "scores": scores})
     proc = subprocess.run([config.CALC_BIN], input=payload, capture_output=True, text=True)
     if proc.returncode != 0:
-        raise RuntimeError(f"kalkulator zakończył się błędem: {proc.stderr.strip()[:500]}")
+        raise RuntimeError(f"calculator failed: {proc.stderr.strip()[:500]}")
     return json.loads(proc.stdout)
 
 
@@ -86,7 +86,7 @@ def recalc_mode(conn, variant: str, mode: int) -> None:
                 res["aim"], res["speed"], res["acc"], res["fl"], res["reading"],
             ))
 
-    # pp graczy: najlepszy wynik na mapę, ważenie jak w bancho
+    # player pp: best score per map, weighted like bancho
     best: dict[int, dict[str, float]] = {}
     for row in results:
         uid, md5, pp = row[2], row[3], row[5]
@@ -124,19 +124,19 @@ def recalc_mode(conn, variant: str, mode: int) -> None:
 
     took = time.time() - started
     print(
-        f"{variant} tryb {mode}: {len(results)} wyników, {len(players)} graczy, "
-        f"bez pliku mapy {missing}, błędy {errors}, {took:.1f} s"
+        f"{variant} mode {mode}: {len(results)} scores, {len(players)} players, "
+        f"missing map file {missing}, errors {errors}, {took:.1f} s"
     )
     for s in samples:
         print("  ", s)
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Przeliczenie wyników wzorem pp")
+    ap = argparse.ArgumentParser(description="Recalculate scores with a pp formula")
     ap.add_argument("--variant")
     ap.add_argument("--mode", type=int, choices=[0, 1, 2, 3])
-    ap.add_argument("--all", action="store_true", help="wszystkie warianty")
-    ap.add_argument("--default", action="store_true", help="wzór serwera, warianty osu! i propozycje")
+    ap.add_argument("--all", action="store_true", help="every variant")
+    ap.add_argument("--default", action="store_true", help="base formula, osu! variants and proposals")
     args = ap.parse_args()
 
     variants = load_variants()
@@ -147,18 +147,18 @@ def main() -> None:
     elif args.variant:
         chosen = [args.variant]
     else:
-        ap.error("podaj --variant, --default albo --all")
+        ap.error("give --variant, --default or --all")
 
     modes_by_variant = variant_modes()
     conn = db.connect()
     db.ensure_schema(conn)
     for variant in chosen:
         if variant not in modes_by_variant:
-            sys.exit(f"nieznany wariant: {variant}")
+            sys.exit(f"unknown variant: {variant}")
         modes = modes_by_variant[variant]
         if args.mode is not None:
             if args.mode not in modes:
-                print(f"{variant}: tryb {args.mode} nieobsługiwany, pomijam")
+                print(f"{variant}: mode {args.mode} not supported, skipping")
                 continue
             modes = [args.mode]
         for mode in modes:

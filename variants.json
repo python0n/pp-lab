@@ -2,11 +2,11 @@
   {
     "id": "tsg",
     "group": "server",
-    "name": {"pl": "Obecny wzór serwera", "en": "Current server formula"},
-    "period": {"pl": "używany teraz na taksiegra", "en": "used on taksiegra right now"},
+    "name": {"pl": "Wzór bancho.py", "en": "bancho.py formula"},
+    "period": {"pl": "domyślny w bancho.py", "en": "bancho.py's default"},
     "description": {
-      "pl": "Wzór, którym serwer liczy pp w trybach zwykłych: osu! z jesieni 2022 z jedną późniejszą poprawką kary za missy (biblioteka akatsuki-pp). To punkt odniesienia dla pozostałych wariantów.",
-      "en": "The formula the server uses for normal modes: osu! from autumn 2022 with one later fix to the miss penalty (akatsuki-pp library). Every other variant is compared against it."
+      "pl": "Wzór, którym bancho.py domyślnie liczy pp w trybach zwykłych: osu! z jesieni 2022 z jedną późniejszą poprawką kary za missy (biblioteka akatsuki-pp). To punkt odniesienia dla pozostałych wariantów.",
+      "en": "The formula bancho.py uses by default for normal modes: osu! from autumn 2022 with one later fix to the miss penalty (akatsuki-pp library). Every other variant is compared against it."
     },
     "changes": []
   },

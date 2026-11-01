@@ -1,1 +1,1 @@
-"""pp-lab: porównanie wzorów pp na wynikach serwera (następca PP Era Hypo)."""
+"""pp-lab: pp calculator and pp formula comparison on a server's scores."""

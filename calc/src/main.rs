@@ -1,17 +1,17 @@
-//! pp_lab: przelicza wyniki wybranym wzorem pp.
+//! pp_lab: recalculates scores with a chosen pp formula.
 //!
-//! Wejście (stdin, JSON):
+//! Input (stdin, JSON):
 //!   {"variant": "osu_2025_10", "scores": [{"id": 1, "map": "/path/123.osu", "mode": 0,
 //!     "mods": 72, "n300": 500, "n100": 3, "n50": 0, "ngeki": 0, "nkatu": 0,
 //!     "nmiss": 0, "combo": 812, "score": 12345678}, ...]}
-//! Wyjście (stdout, JSON): lista w tej samej kolejności:
+//! Output (stdout, JSON): a list in the same order:
 //!   [{"id": 1, "pp": 312.5, "stars": 6.1, "aim": .., "speed": .., "acc": .., "fl": .., "reading": .., "error": null}]
 //!
-//! Kalkulator (strona /reworks): zamiast trafień można podać "acc" (np. 98.5) i pominąć
-//! "combo" - wtedy liczone jest pełne combo; "n300" pominięte = reszta obiektów.
-//! W wyniku jest też "max_combo" mapy.
+//! Calculator: instead of hit counts "acc" (e.g. 98.5) can be given and "combo" left out,
+//! then a full combo is calculated; without "n300" the remaining objects count as 300s.
+//! The output also has the map's "max_combo".
 //!
-//! `pp_lab --variants` wypisuje listę obsługiwanych wariantów.
+//! `pp_lab --variants` prints the supported variants.
 
 use std::collections::HashMap;
 use std::io::{self, Read};
@@ -22,11 +22,11 @@ use serde::{Deserialize, Serialize};
 const NIGHTCORE: u32 = 512;
 const DOUBLETIME: u32 = 64;
 
-/// (id, tryby, opis techniczny)
+/// (id, modes, technical description)
 const VARIANTS: &[(&str, &[u8], &str)] = &[
-    ("tsg", &[0, 1, 2, 3], "akatsuki-pp b96019f - wzór używany przez serwer"),
-    ("osu_2026_07", &[0, 1, 2, 3], "rosu-pp pp-update 072ed25 - osu! od lipca 2026"),
-    ("osu_2025_10", &[0, 1, 2, 3], "rosu-pp 4.0 - osu! paź 2025 - lip 2026"),
+    ("tsg", &[0, 1, 2, 3], "akatsuki-pp b96019f - bancho.py's default formula"),
+    ("osu_2026_07", &[0, 1, 2, 3], "rosu-pp pp-update 072ed25 - osu! since July 2026"),
+    ("osu_2025_10", &[0, 1, 2, 3], "rosu-pp 4.0 - osu! Oct 2025 - Jul 2026"),
     ("osu_2025_03", &[0], "rosu-pp-older osu_2025"),
     ("osu_2024", &[0], "rosu-pp-older osu_2024"),
     ("osu_2022", &[0], "rosu-pp-older osu_2022"),
@@ -112,11 +112,11 @@ fn osu_acc(s: &ScoreInput) -> f64 {
 }
 
 fn mods_of(s: &ScoreInput) -> u32 {
-    // jak bancho: NC liczy się jak DT
+    // like bancho: NC counts as DT
     if s.mods & NIGHTCORE != 0 { s.mods | DOUBLETIME } else { s.mods }
 }
 
-// ---------- wzór serwera (akatsuki-pp) ----------
+// ---------- bancho.py's formula (akatsuki-pp) ----------
 
 fn calc_tsg(map: &akatsuki_pp::Beatmap, s: &ScoreInput) -> ScoreOutput {
     use akatsuki_pp::{AnyPP, GameMode, PerformanceAttributes};
@@ -164,9 +164,9 @@ fn calc_tsg(map: &akatsuki_pp::Beatmap, s: &ScoreInput) -> ScoreOutput {
     o
 }
 
-// ---------- rosu-pp 4.0 (osu! paź 2025) i pp-update (osu! lip 2026) ----------
-// Ten sam kod dla obu wersji biblioteki: różnią się tylko ścieżką crate'a
-// i polem pp_reading, które istnieje tylko w nowszej.
+// ---------- rosu-pp 4.0 (osu! Oct 2025) and pp-update (osu! Jul 2026) ----------
+// The same code for both library versions: they differ only in the crate path
+// and the pp_reading field, which exists only in the newer one.
 
 macro_rules! rosu_calc {
     ($krate:ident, $map:expr, $s:expr, $reading:expr) => {{
@@ -195,11 +195,11 @@ macro_rules! rosu_calc {
             perf = perf.n100(s.n100).n50(s.n50).n_geki(s.ngeki).n_katu(s.nkatu);
         }
         if s.mode == 0 && s.score > 0 {
-            // stable: szacowanie missów w sliderach korzysta z wyniku punktowego
+            // stable: estimating slider breaks uses the score
             perf = perf.legacy_total_score(s.score.min(u32::MAX as u64) as u32);
         }
         match perf.checked_calculate() {
-            Err(_) => fail(s.id, "mapa oznaczona jako podejrzana".into()),
+            Err(_) => fail(s.id, "map flagged as suspicious".into()),
             Ok(r) => {
                 let mut o = out(s.id, r.pp(), r.stars());
                 o.max_combo = r.max_combo();
@@ -234,12 +234,12 @@ fn calc_rosu_next(map: &rosu_pp_next::Beatmap, s: &ScoreInput) -> ScoreOutput {
     rosu_calc!(rosu_pp_next, map, s, |a: &rosu_pp_next::osu::OsuPerformanceAttributes| a.pp_reading)
 }
 
-// ---------- stare ery (tylko osu!std) ----------
+// ---------- older eras (osu!std only) ----------
 
 fn calc_era(variant: &str, map: &rosu_pp::Beatmap, s: &ScoreInput) -> ScoreOutput {
     use rosu_pp_older as o;
     if s.mode != 0 {
-        return fail(s.id, "ten wariant liczy tylko osu!std".into());
+        return fail(s.id, "this variant supports osu!std only".into());
     }
     let a = osu_acc(s);
     let m = mods_of(s);
@@ -303,34 +303,34 @@ fn calc_era(variant: &str, map: &rosu_pp::Beatmap, s: &ScoreInput) -> ScoreOutpu
             }
             Err(e) => fail(s.id, format!("{e}")),
         },
-        other => fail(s.id, format!("nieznany wariant {other}")),
+        other => fail(s.id, format!("unknown variant {other}")),
     }
 }
 
-/// Liczy jeden wynik; jeśli biblioteka spanikuje (np. uszkodzona mapa), zwraca błąd zamiast przerywać wszystko.
+/// Calculates one score; if the library panics (e.g. a broken map) it returns an error instead of stopping everything.
 fn guard(id: i64, f: impl FnOnce() -> ScoreOutput) -> ScoreOutput {
     match std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)) {
         Ok(o) => o,
         Err(e) => {
             let msg = e.downcast_ref::<&str>().map(|s| s.to_string())
                 .or_else(|| e.downcast_ref::<String>().cloned())
-                .unwrap_or_else(|| "nieznany błąd".into());
-            fail(id, format!("błąd kalkulatora: {msg}"))
+                .unwrap_or_else(|| "unknown error".into());
+            fail(id, format!("calculator error: {msg}"))
         }
     }
 }
-// ---------- jedna mapa, wszystkie jej wyniki ----------
+// ---------- one map, all of its scores ----------
 
 fn calc_map(variant: &str, path: &str, scores: &[&ScoreInput]) -> Vec<ScoreOutput> {
     let all_fail = |msg: String| scores.iter().map(|s| fail(s.id, msg.clone())).collect::<Vec<_>>();
     match variant {
         "tsg" => match akatsuki_pp::Beatmap::from_path(path) {
             Ok(map) => scores.iter().map(|s| guard(s.id, || calc_tsg(&map, s))).collect(),
-            Err(e) => all_fail(format!("mapa: {e}")),
+            Err(e) => all_fail(format!("map: {e}")),
         },
         "osu_2026_07" => match rosu_pp_next::Beatmap::from_path(path) {
             Ok(map) => scores.iter().map(|s| guard(s.id, || calc_rosu_next(&map, s))).collect(),
-            Err(e) => all_fail(format!("mapa: {e}")),
+            Err(e) => all_fail(format!("map: {e}")),
         },
         _ => match rosu_pp::Beatmap::from_path(path) {
             Ok(map) => {
@@ -340,13 +340,13 @@ fn calc_map(variant: &str, path: &str, scores: &[&ScoreInput]) -> Vec<ScoreOutpu
                     scores.iter().map(|s| guard(s.id, || calc_era(variant, &map, s))).collect()
                 }
             }
-            Err(e) => all_fail(format!("mapa: {e}")),
+            Err(e) => all_fail(format!("map: {e}")),
         },
     }
 }
 
 fn main() {
-    // panika w bibliotece jest łapana w guard(); nie śmiecimy stderr
+    // a panic in the library is caught in guard(); keep stderr clean
     std::panic::set_hook(Box::new(|_| {}));
     if std::env::args().any(|a| a == "--variants") {
         let list: Vec<_> = VARIANTS
@@ -368,11 +368,11 @@ fn main() {
     };
     let variant = input.variant.as_str();
     let Some((_, modes, _)) = VARIANTS.iter().find(|(id, _, _)| *id == variant) else {
-        eprintln!("nieznany wariant: {variant}");
+        eprintln!("unknown variant: {variant}");
         std::process::exit(2);
     };
 
-    // grupowanie po mapie: każdy plik .osu parsowany raz
+    // grouped by map: every .osu file is parsed once
     let mut by_map: HashMap<&str, Vec<&ScoreInput>> = HashMap::new();
     for s in &input.scores {
         by_map.entry(s.map.as_str()).or_default().push(s);
@@ -385,17 +385,17 @@ fn main() {
             let (ok, bad): (Vec<&ScoreInput>, Vec<&ScoreInput>) =
                 scores.iter().partition(|s| modes.contains(&s.mode));
             let mut v = calc_map(variant, path, &ok);
-            v.extend(bad.iter().map(|s| fail(s.id, "tryb nieobsługiwany przez wariant".into())));
+            v.extend(bad.iter().map(|s| fail(s.id, "mode not supported by this variant".into())));
             v
         })
         .collect();
 
-    // przywrócenie kolejności wejścia
+    // back to the input order
     let mut by_id: HashMap<i64, ScoreOutput> = results.into_iter().map(|r| (r.id, r)).collect();
     let ordered: Vec<ScoreOutput> = input
         .scores
         .iter()
-        .map(|s| by_id.remove(&s.id).unwrap_or_else(|| fail(s.id, "brak wyniku".into())))
+        .map(|s| by_id.remove(&s.id).unwrap_or_else(|| fail(s.id, "no result".into())))
         .collect();
     println!("{}", serde_json::to_string(&ordered).unwrap());
 }

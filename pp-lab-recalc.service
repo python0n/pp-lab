@@ -1,5 +1,5 @@
 [Unit]
-Description=pp-lab: nocne przeliczenie wariantów pp
+Description=pp-lab: recalculate pp variants
 
 [Service]
 Type=oneshot

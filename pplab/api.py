@@ -1,8 +1,7 @@
-"""API tylko do odczytu dla strony reworków w Shiinie.
+"""Read-only API for a pp reworks page.
 
-Dane pochodzą z tabel pplab_*, które wypełnia `python -m pplab.recalc`.
-Te same trasy są pod /hypo/api (stara ścieżka, już przekierowana w nginx)
-i /pp-lab/api.
+The data comes from the pplab_* tables filled by `python -m pplab.recalc`.
+Routes are served under /pp-lab/api (and under API_EXTRA_PREFIX, if set).
 """
 from __future__ import annotations
 
@@ -22,9 +21,9 @@ def _variant(vid: str, mode: int | None = None) -> dict:
     for v in load_variants():
         if v["id"] == vid:
             if mode is not None and mode not in v["modes"]:
-                raise HTTPException(400, "ten wariant nie obsługuje wybranego trybu")
+                raise HTTPException(400, "this variant does not support the chosen mode")
             return v
-    raise HTTPException(404, "nieznany wariant")
+    raise HTTPException(404, "unknown variant")
 
 
 def _query(sql: str, args: tuple = ()) -> list[dict]:
@@ -112,7 +111,7 @@ def player(variant: str, id: int, mode: int = Query(0, ge=0, le=3)):
         (variant, mode, base, mode, id),
     )
     if not info:
-        raise HTTPException(404, "nie ma takiego gracza")
+        raise HTTPException(404, "no such player")
     rows = _query(
         "SELECT n.score_id, n.map_md5, n.pp, n.stars, n.aim, n.speed, n.acc_pp, n.fl, n.reading, "
         "b.pp AS old_pp, s.mods, s.acc, s.max_combo, s.nmiss, s.grade, s.play_time, "
@@ -165,7 +164,7 @@ def scores(
     order: str = Query("gain", pattern="^(gain|loss|top)$"),
     limit: int = Query(50, ge=1, le=100),
 ):
-    """Wyniki (obecne najlepsze wyniki graczy na mapach), które najbardziej zyskują, tracą albo dają najwięcej pp."""
+    """Scores (players' current best on each map) that gain, lose or give the most pp."""
     _variant(variant, mode)
     sort = {
         "gain": "(n.pp - b.pp) DESC",
@@ -196,29 +195,29 @@ def scores(
     }
 
 
-# mody, które zmieniają gwiazdki w osu!std: EZ, HR, DT, HT, NC, FL
+# mods that change star rating in osu!std: EZ, HR, DT, HT, NC, FL
 _STAR_MODS = 2 | 16 | 64 | 256 | 512 | 1024
 _stars_cache: dict[tuple[int, int], float] = {}
 
 
 @router.get("/stars")
 def stars(items: str = Query(..., max_length=2000)):
-    """Gwiazdki osu!std wzorem serwera dla par map_id:mods, np. ?items=129891:64,75:0."""
+    """osu!std star rating with the base formula for map_id:mods pairs, e.g. ?items=129891:64,75:0."""
     wanted: list[tuple[int, int]] = []
     asked: dict[str, tuple[int, int]] = {}
     for part in items.split(","):
         try:
             map_id, mods = (int(x) for x in part.split(":", 1))
         except ValueError:
-            raise HTTPException(400, "zły format, oczekiwane map_id:mods")
+            raise HTTPException(400, "wrong format, expected map_id:mods")
         if not (0 < map_id < 2_147_483_647 and 0 <= mods < 2**31):
-            raise HTTPException(400, "zły format, oczekiwane map_id:mods")
+            raise HTTPException(400, "wrong format, expected map_id:mods")
         key = (map_id, mods & _STAR_MODS)
         asked[f"{map_id}:{mods}"] = key
         if key not in wanted:
             wanted.append(key)
     if len(wanted) > 100:
-        raise HTTPException(400, "najwyżej 100 map naraz")
+        raise HTTPException(400, "at most 100 maps at once")
     missing = [k for k in wanted if k not in _stars_cache]
     scores = []
     for i, (map_id, mods) in enumerate(missing):
@@ -242,8 +241,7 @@ def stars(items: str = Query(..., max_length=2000)):
 from .calculator import router as calc_router  # noqa: E402
 from .web import router as web_router  # noqa: E402
 
-app.include_router(router, prefix="/hypo/api")
-app.include_router(router, prefix="/pp-lab/api")
-app.include_router(calc_router, prefix="/hypo/api")
-app.include_router(calc_router, prefix="/pp-lab/api")
+for _prefix in ["/pp-lab/api"] + ([config.API_EXTRA_PREFIX] if config.API_EXTRA_PREFIX else []):
+    app.include_router(router, prefix=_prefix)
+    app.include_router(calc_router, prefix=_prefix)
 app.include_router(web_router)

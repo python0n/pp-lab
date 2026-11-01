@@ -30,9 +30,11 @@ CALC_BIN = os.environ.get("CALC_BIN", str(ROOT / "calc" / "target" / "release" /
 MAPS_DIR = Path(os.environ.get("MAPS_DIR", str(ROOT / "maps")))
 # .osu files of maps the server doesn't have, downloaded once by the calculator
 MAPS_CACHE_DIR = Path(os.environ.get("MAPS_CACHE_DIR", str(ROOT / "cache" / "osu")))
-# wariant, z którym porównujemy (wzór, którego dziś używa serwer)
+# the variant the others are compared with (the formula the server uses)
 BASE_VARIANT = os.environ.get("BASE_VARIANT", "tsg")
-# ile wyników na jedno wywołanie kalkulatora
+# extra path prefix for the API next to /pp-lab/api (e.g. an old path your website still calls), empty = none
+API_EXTRA_PREFIX = os.environ.get("API_EXTRA_PREFIX", "").strip().rstrip("/")
+# scores per calculator run
 CHUNK = int(os.environ.get("CHUNK", "20000"))
 
 # ---- calculator and its web page ----

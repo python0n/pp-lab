@@ -58,6 +58,7 @@ enough, see `pp-lab-recalc.timer`). `pp-lab.service` runs the API with systemd.
 | `THEME_CSS` | | your own CSS file loaded after the default one (see Customizing) |
 | `COVER_URL` | osu! covers | cover image address, `{set_id}` is replaced; empty = no cover |
 | `BASE_VARIANT` | `tsg` | the formula other ones are compared with |
+| `API_EXTRA_PREFIX` | | serve the API also under this path, e.g. an old one your site still uses |
 
 ## API
 
