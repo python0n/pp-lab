@@ -237,5 +237,9 @@ def stars(items: str = Query(..., max_length=2000)):
     return {name: _stars_cache[key] for name, key in asked.items() if key in _stars_cache}
 
 
+from .calculator import router as calc_router  # noqa: E402
+
 app.include_router(router, prefix="/hypo/api")
 app.include_router(router, prefix="/pp-lab/api")
+app.include_router(calc_router, prefix="/hypo/api")
+app.include_router(calc_router, prefix="/pp-lab/api")
