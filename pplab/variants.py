@@ -7,7 +7,7 @@ from . import config
 
 @lru_cache(maxsize=1)
 def load_variants() -> list[dict]:
-    """Opisy wariantów (variants.json) z listą trybów podaną przez kalkulator."""
+    """Variant descriptions (variants.json) with the modes reported by the calculator."""
     meta = json.loads((config.ROOT / "variants.json").read_text(encoding="utf-8"))
     modes = variant_modes()
     return [dict(v, modes=modes.get(v["id"], [])) for v in meta if v["id"] in modes]

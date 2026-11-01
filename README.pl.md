@@ -57,6 +57,7 @@ zobacz `pp-lab-recalc.timer`). `pp-lab.service` uruchamia API przez systemd.
 | `THEME_CSS` | | własny plik CSS ładowany po domyślnym (zobacz Własny wygląd) |
 | `COVER_URL` | okładki osu! | adres okładki, `{set_id}` jest podmieniane; puste = bez okładki |
 | `BASE_VARIANT` | `tsg` | formuła, z którą porównywane są pozostałe |
+| `API_EXTRA_PREFIX` | | API dostępne też pod tą ścieżką, np. starą, której używa jeszcze twoja strona |
 
 ## API
 
