@@ -7,6 +7,10 @@
 //! Wyjście (stdout, JSON): lista w tej samej kolejności:
 //!   [{"id": 1, "pp": 312.5, "stars": 6.1, "aim": .., "speed": .., "acc": .., "fl": .., "reading": .., "error": null}]
 //!
+//! Kalkulator (strona /reworks): zamiast trafień można podać "acc" (np. 98.5) i pominąć
+//! "combo" - wtedy liczone jest pełne combo; "n300" pominięte = reszta obiektów.
+//! W wyniku jest też "max_combo" mapy.
+//!
 //! `pp_lab --variants` wypisuje listę obsługiwanych wariantów.
 
 use std::collections::HashMap;
@@ -52,7 +56,7 @@ struct ScoreInput {
     #[serde(default)]
     mods: u32,
     #[serde(default)]
-    n300: u32,
+    n300: Option<u32>,
     #[serde(default)]
     n100: u32,
     #[serde(default)]
@@ -64,9 +68,12 @@ struct ScoreInput {
     #[serde(default)]
     nmiss: u32,
     #[serde(default)]
-    combo: u32,
+    combo: Option<u32>,
     #[serde(default)]
     score: u64,
+    /// accuracy in % instead of hit counts (calculator)
+    #[serde(default)]
+    acc: Option<f64>,
 }
 
 #[derive(Serialize, Default)]
@@ -79,6 +86,7 @@ struct ScoreOutput {
     acc: f64,
     fl: f64,
     reading: f64,
+    max_combo: u32,
     error: Option<String>,
 }
 
@@ -95,11 +103,12 @@ fn fail(id: i64, msg: String) -> ScoreOutput {
 }
 
 fn osu_acc(s: &ScoreInput) -> f64 {
-    let total = s.n300 + s.n100 + s.n50 + s.nmiss;
+    let n300 = s.n300.unwrap_or(0);
+    let total = n300 + s.n100 + s.n50 + s.nmiss;
     if total == 0 {
         return 100.0;
     }
-    (300.0 * s.n300 as f64 + 100.0 * s.n100 as f64 + 50.0 * s.n50 as f64) / (300.0 * total as f64) * 100.0
+    (300.0 * n300 as f64 + 100.0 * s.n100 as f64 + 50.0 * s.n50 as f64) / (300.0 * total as f64) * 100.0
 }
 
 fn mods_of(s: &ScoreInput) -> u32 {
@@ -117,18 +126,25 @@ fn calc_tsg(map: &akatsuki_pp::Beatmap, s: &ScoreInput) -> ScoreOutput {
         3 => GameMode::Mania,
         _ => GameMode::Osu,
     };
-    let r = AnyPP::new(map)
-        .mode(mode)
-        .mods(mods_of(s))
-        .combo(s.combo as usize)
-        .n300(s.n300 as usize)
-        .n100(s.n100 as usize)
-        .n50(s.n50 as usize)
-        .n_geki(s.ngeki as usize)
-        .n_katu(s.nkatu as usize)
-        .n_misses(s.nmiss as usize)
-        .calculate();
+    let mut pp = AnyPP::new(map).mode(mode).mods(mods_of(s)).n_misses(s.nmiss as usize);
+    if let Some(c) = s.combo {
+        pp = pp.combo(c as usize);
+    }
+    if let Some(a) = s.acc {
+        pp = pp.accuracy(a);
+    } else {
+        if let Some(n) = s.n300 {
+            pp = pp.n300(n as usize);
+        }
+        pp = pp
+            .n100(s.n100 as usize)
+            .n50(s.n50 as usize)
+            .n_geki(s.ngeki as usize)
+            .n_katu(s.nkatu as usize);
+    }
+    let r = pp.calculate();
     let mut o = out(s.id, r.pp(), r.stars());
+    o.max_combo = r.max_combo() as u32;
     match r {
         PerformanceAttributes::Osu(a) => {
             o.aim = clean(a.pp_aim);
@@ -166,13 +182,18 @@ macro_rules! rosu_calc {
             .mode_or_ignore(mode)
             .mods(mods_of(s))
             .lazer(false)
-            .combo(s.combo)
-            .n300(s.n300)
-            .n100(s.n100)
-            .n50(s.n50)
-            .n_geki(s.ngeki)
-            .n_katu(s.nkatu)
             .misses(s.nmiss);
+        if let Some(c) = s.combo {
+            perf = perf.combo(c);
+        }
+        if let Some(a) = s.acc {
+            perf = perf.accuracy(a);
+        } else {
+            if let Some(n) = s.n300 {
+                perf = perf.n300(n);
+            }
+            perf = perf.n100(s.n100).n50(s.n50).n_geki(s.ngeki).n_katu(s.nkatu);
+        }
         if s.mode == 0 && s.score > 0 {
             // stable: szacowanie missów w sliderach korzysta z wyniku punktowego
             perf = perf.legacy_total_score(s.score.min(u32::MAX as u64) as u32);
@@ -181,6 +202,7 @@ macro_rules! rosu_calc {
             Err(_) => fail(s.id, "mapa oznaczona jako podejrzana".into()),
             Ok(r) => {
                 let mut o = out(s.id, r.pp(), r.stars());
+                o.max_combo = r.max_combo();
                 match r {
                     PerformanceAttributes::Osu(a) => {
                         o.aim = clean(a.pp_aim);
@@ -221,10 +243,12 @@ fn calc_era(variant: &str, map: &rosu_pp::Beatmap, s: &ScoreInput) -> ScoreOutpu
     }
     let a = osu_acc(s);
     let m = mods_of(s);
+    let combo = s.combo.unwrap_or(0);
+    let n300 = s.n300.unwrap_or(0);
     macro_rules! old {
         ($module:ident, $acc:expr) => {{
             let r = o::$module::OsuPP::new(map)
-                .mods(m).combo(s.combo).n300(s.n300).n100(s.n100)
+                .mods(m).combo(combo).n300(n300).n100(s.n100)
                 .n50(s.n50).misses(s.nmiss).accuracy($acc).calculate();
             let mut x = out(s.id, r.pp as f64, r.difficulty.stars as f64);
             x.aim = clean(r.pp_aim as f64);
@@ -245,7 +269,7 @@ fn calc_era(variant: &str, map: &rosu_pp::Beatmap, s: &ScoreInput) -> ScoreOutpu
         "osu_2021_nov" => old!(osu_2021_november, a),
         "osu_2022" => {
             let r = o::osu_2022::OsuPP::new(map)
-                .mods(m).combo(s.combo).n300(s.n300).n100(s.n100)
+                .mods(m).combo(combo).n300(n300).n100(s.n100)
                 .n50(s.n50).misses(s.nmiss).calculate();
             let mut x = out(s.id, r.pp, r.difficulty.stars);
             x.aim = clean(r.pp_aim);
@@ -256,7 +280,7 @@ fn calc_era(variant: &str, map: &rosu_pp::Beatmap, s: &ScoreInput) -> ScoreOutpu
         }
         "osu_2024" => {
             let r = o::osu_2024::OsuPP::new(map)
-                .mods(m).lazer(false).combo(s.combo).n300(s.n300).n100(s.n100)
+                .mods(m).lazer(false).combo(combo).n300(n300).n100(s.n100)
                 .n50(s.n50).misses(s.nmiss).calculate();
             let mut x = out(s.id, r.pp, r.difficulty.stars);
             x.aim = clean(r.pp_aim);
@@ -266,7 +290,7 @@ fn calc_era(variant: &str, map: &rosu_pp::Beatmap, s: &ScoreInput) -> ScoreOutpu
             x
         }
         "osu_2025_03" => match o::osu_2025::OsuPP::new(map)
-            .mods(m).lazer(false).combo(s.combo).n300(s.n300).n100(s.n100)
+            .mods(m).lazer(false).combo(combo).n300(n300).n100(s.n100)
             .n50(s.n50).misses(s.nmiss).calculate()
         {
             Ok(r) => {
