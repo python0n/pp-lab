@@ -1,0 +1,9 @@
+[Unit]
+Description=pp-lab: przeliczenie co noc
+
+[Timer]
+OnCalendar=*-*-* 04:37
+Persistent=true
+
+[Install]
+WantedBy=timers.target

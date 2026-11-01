@@ -1,0 +1,12 @@
+[Unit]
+Description=pp-lab API (reworki pp dla Shiiny)
+After=network.target
+
+[Service]
+User=pplab
+WorkingDirectory=/opt/pp-lab
+ExecStart=/opt/pp-lab/venv/bin/uvicorn pplab.api:app --host 127.0.0.1 --port 8766
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

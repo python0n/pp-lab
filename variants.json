@@ -1,0 +1,53 @@
+[
+  {
+    "id": "tsg",
+    "group": "server",
+    "name": {"pl": "Obecny wzór serwera", "en": "Current server formula"},
+    "period": {"pl": "używany teraz na taksiegra", "en": "used on taksiegra right now"},
+    "description": {
+      "pl": "Wzór, którym serwer liczy pp w trybach zwykłych: osu! z jesieni 2022 z jedną późniejszą poprawką kary za missy (biblioteka akatsuki-pp). To punkt odniesienia dla pozostałych wariantów.",
+      "en": "The formula the server uses for normal modes: osu! from autumn 2022 with one later fix to the miss penalty (akatsuki-pp library). Every other variant is compared against it."
+    },
+    "changes": []
+  },
+  {
+    "id": "osu_2026_07",
+    "group": "osu",
+    "name": {"pl": "osu! lipiec 2026", "en": "osu! July 2026"},
+    "period": {"pl": "obecny wzór osu!", "en": "current osu! formula"},
+    "description": {
+      "pl": "Wzór, którego osu! używa od lipca 2026. Liczony wersją testową rosu-pp (gałąź pp-update), więc pojedyncze wartości mogą minimalnie różnić się od osu!.",
+      "en": "The formula osu! has used since July 2026. Calculated with the test version of rosu-pp (pp-update branch), so single values may differ slightly from osu!."
+    },
+    "changes": [
+      {"pl": "Nowa umiejętność „reading”: zastępuje dawne bonusy za AR i HD, nagradza trudne do odczytania mapy.", "en": "New reading skill: replaces the old AR and HD bonuses and rewards maps that are hard to read."},
+      {"pl": "Zmiany w liczeniu aim i speed oraz w szacowaniu missów na sliderach.", "en": "Changes to aim and speed and to estimating slider breaks."},
+      {"pl": "Zawiera też zmiany z października 2025.", "en": "Also includes the October 2025 changes."}
+    ]
+  },
+  {
+    "id": "osu_2025_10",
+    "group": "osu",
+    "name": {"pl": "osu! październik 2025", "en": "osu! October 2025"},
+    "period": {"pl": "paź 2025 - lip 2026", "en": "Oct 2025 - Jul 2026"},
+    "description": {
+      "pl": "Wzór osu! po aktualizacji z 29.10.2025 (rosu-pp 4.0), używany do lipcowego reworku 2026.",
+      "en": "The osu! formula after the 29.10.2025 update (rosu-pp 4.0), used until the July 2026 rework."
+    },
+    "changes": [
+      {"pl": "Zmiany we wszystkich trybach, opisane w newsie osu! z 29.10.2025.", "en": "Changes to all modes, described in the osu! news post from 29.10.2025."}
+    ]
+  },
+  {"id": "osu_2025_03", "group": "era", "name": {"pl": "osu! marzec 2025", "en": "osu! March 2025"}, "period": {"pl": "mar 2025 - paź 2025", "en": "Mar 2025 - Oct 2025"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2024", "group": "era", "name": {"pl": "osu! październik 2024", "en": "osu! October 2024"}, "period": {"pl": "paź 2024 - mar 2025", "en": "Oct 2024 - Mar 2025"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2022", "group": "era", "name": {"pl": "osu! wrzesień 2022", "en": "osu! September 2022"}, "period": {"pl": "wrz 2022 - paź 2024", "en": "Sep 2022 - Oct 2024"}, "description": {"pl": "Historyczny wzór osu! bez poprawek Akatsuki, tylko osu!std.", "en": "Historical osu! formula without Akatsuki's tweaks, osu!std only."}, "changes": []},
+  {"id": "osu_2021_nov", "group": "era", "name": {"pl": "osu! listopad 2021", "en": "osu! November 2021"}, "period": {"pl": "lis 2021 - wrz 2022", "en": "Nov 2021 - Sep 2022"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2021_jul", "group": "era", "name": {"pl": "osu! lipiec 2021", "en": "osu! July 2021"}, "period": {"pl": "lip 2021 - lis 2021", "en": "Jul 2021 - Nov 2021"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2021_jan", "group": "era", "name": {"pl": "osu! styczeń 2021", "en": "osu! January 2021"}, "period": {"pl": "sty 2021 - lip 2021", "en": "Jan 2021 - Jul 2021"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2019", "group": "era", "name": {"pl": "osu! luty 2019", "en": "osu! February 2019"}, "period": {"pl": "lut 2019 - sty 2021", "en": "Feb 2019 - Jan 2021"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2018", "group": "era", "name": {"pl": "osu! maj 2018", "en": "osu! May 2018"}, "period": {"pl": "maj 2018 - lut 2019", "en": "May 2018 - Feb 2019"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2015_apr", "group": "era", "name": {"pl": "osu! kwiecień 2015", "en": "osu! April 2015"}, "period": {"pl": "kwi 2015 - maj 2018", "en": "Apr 2015 - May 2018"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2015_feb", "group": "era", "name": {"pl": "osu! luty 2015", "en": "osu! February 2015"}, "period": {"pl": "lut 2015 - kwi 2015", "en": "Feb 2015 - Apr 2015"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2014_jul", "group": "era", "name": {"pl": "osu! lipiec 2014", "en": "osu! July 2014"}, "period": {"pl": "lip 2014 - lut 2015", "en": "Jul 2014 - Feb 2015"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []},
+  {"id": "osu_2014_may", "group": "era", "name": {"pl": "osu! maj 2014", "en": "osu! May 2014"}, "period": {"pl": "maj 2014 - lip 2014", "en": "May 2014 - Jul 2014"}, "description": {"pl": "Historyczny wzór osu!, tylko osu!std.", "en": "Historical osu! formula, osu!std only."}, "changes": []}
+]
