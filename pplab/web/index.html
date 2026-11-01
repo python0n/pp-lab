@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{SITE_NAME}} - pp calculator</title>
+<meta name="description" content="pp calculator for osu!: any map, mods, accuracy or hit counts, several pp formulas.">
+<link rel="stylesheet" href="assets/app.css">
+{{THEME_LINK}}
+</head>
+<body>
+<div class="pl-page" id="pl-root" data-cover="{{COVER_URL}}">
+  <header class="pl-header">
+    <div class="pl-brand">{{LOGO}}<span class="pl-site">{{SITE_NAME}}</span><span class="pl-sub" data-i18n="title">pp calculator</span></div>
+    <div class="pl-header-tools">
+      <select id="pl-lang" class="pl-select" aria-label="Language">
+        <option value="en">English</option>
+        <option value="pl">Polski</option>
+      </select>
+      <button type="button" id="pl-theme" class="pl-btn pl-btn-ghost" data-i18n="theme_toggle">Light / dark</button>
+    </div>
+  </header>
+
+  <main class="pl-main">
+    <section class="pl-card pl-form">
+      <label class="pl-label" for="pl-map" data-i18n="map">Map (ID or link)</label>
+      <input type="text" id="pl-map" class="pl-input" maxlength="200" autocomplete="off" data-i18n-placeholder="map_placeholder" placeholder="e.g. 129891 or https://osu.ppy.sh/b/129891">
+
+      <div class="pl-label" data-i18n="mode">Mode</div>
+      <div class="pl-chips" id="pl-modes">
+        <button type="button" class="pl-chip active" data-mode="" data-i18n="mode_auto">Map's</button>
+        <button type="button" class="pl-chip" data-mode="0">osu!</button>
+        <button type="button" class="pl-chip" data-mode="1">taiko</button>
+        <button type="button" class="pl-chip" data-mode="2">catch</button>
+        <button type="button" class="pl-chip" data-mode="3">mania</button>
+      </div>
+
+      <div class="pl-label" data-i18n="mods">Mods</div>
+      <div class="pl-chips" id="pl-mods">
+        <button type="button" class="pl-chip" data-mod="NF">NF</button>
+        <button type="button" class="pl-chip" data-mod="EZ">EZ</button>
+        <button type="button" class="pl-chip" data-mod="HD">HD</button>
+        <button type="button" class="pl-chip" data-mod="HR">HR</button>
+        <button type="button" class="pl-chip" data-mod="DT">DT</button>
+        <button type="button" class="pl-chip" data-mod="NC">NC</button>
+        <button type="button" class="pl-chip" data-mod="HT">HT</button>
+        <button type="button" class="pl-chip" data-mod="FL">FL</button>
+        <button type="button" class="pl-chip" data-mod="SO">SO</button>
+      </div>
+
+      <div class="pl-tabs" id="pl-kind">
+        <button type="button" class="pl-tab active" data-kind="acc" data-i18n="by_acc">Accuracy</button>
+        <button type="button" class="pl-tab" data-kind="hits" data-i18n="by_hits">Hit counts</button>
+      </div>
+
+      <div class="pl-grid2" id="pl-acc-box">
+        <div><label class="pl-label" for="pl-acc" data-i18n="acc">Accuracy (%)</label><input type="number" id="pl-acc" class="pl-input" min="0" max="100" step="0.01" value="100"></div>
+        <div><label class="pl-label" for="pl-miss-a" data-i18n="miss">Misses</label><input type="number" id="pl-miss-a" class="pl-input" min="0" step="1" value="0"></div>
+      </div>
+      <div class="pl-grid3" id="pl-hits-box" hidden>
+        <div><label class="pl-label" for="pl-n100">100</label><input type="number" id="pl-n100" class="pl-input" min="0" step="1" value="0"></div>
+        <div><label class="pl-label" for="pl-n50">50</label><input type="number" id="pl-n50" class="pl-input" min="0" step="1" value="0"></div>
+        <div><label class="pl-label" for="pl-miss" data-i18n="miss">Misses</label><input type="number" id="pl-miss" class="pl-input" min="0" step="1" value="0"></div>
+      </div>
+      <label class="pl-label" for="pl-combo" data-i18n="combo">Combo</label>
+      <input type="number" id="pl-combo" class="pl-input" min="0" step="1" data-i18n-placeholder="combo_full" placeholder="empty = full combo">
+      <div class="pl-hint" id="pl-acc-note"></div>
+      <p class="pl-hint" data-i18n="note">Maps are downloaded from osu! the first time they are calculated.</p>
+    </section>
+
+    <section class="pl-results">
+      <div class="pl-card pl-empty" id="pl-empty"><span id="pl-empty-text" data-i18n="empty">Enter a map ID or link.</span></div>
+      <div id="pl-result" hidden>
+        <div class="pl-card pl-map">
+          <div class="pl-cover" id="pl-cover"></div>
+          <div class="pl-map-body">
+            <div class="pl-muted" id="pl-artist"></div>
+            <a class="pl-title" id="pl-title" target="_blank" rel="noopener noreferrer"></a>
+            <div class="pl-muted" id="pl-meta"></div>
+          </div>
+        </div>
+        <div class="pl-variants" id="pl-variants"></div>
+        <div class="pl-card">
+          <div class="pl-card-head" id="pl-acc-head"></div>
+          <div class="pl-table-wrap"><table class="pl-table" id="pl-acc-table"></table></div>
+        </div>
+        <div class="pl-card">
+          <div class="pl-card-head" data-i18n="table_mods">SS with mods</div>
+          <div class="pl-table-wrap"><table class="pl-table" id="pl-mod-table"></table></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pl-footer">
+    <span data-i18n="footer">pp calculated with rosu-pp and akatsuki-pp.</span>
+    <a href="https://github.com/python0n/pp-lab" target="_blank" rel="noopener noreferrer">pp-lab</a>
+  </footer>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

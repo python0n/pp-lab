@@ -1,0 +1,17 @@
+/*
+ * Example theme. Copy it, change what you like and set THEME_CSS=themes/my-theme.css in .env.
+ * It is loaded after the default styles, so only the variables you set here change.
+ */
+:root {
+  --pl-accent: #ff66aa;          /* osu! pink */
+  --pl-radius: 6px;
+  --pl-font: "Torus", "Inter", system-ui, sans-serif;
+  --pl-cover-height: 160px;
+}
+
+:root[data-theme="dark"], :root:not([data-theme]) {
+  --pl-bg: #17121a;
+  --pl-surface: #221a26;
+  --pl-surface-2: #2d2333;
+  --pl-border: #3b2e42;
+}

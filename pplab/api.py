@@ -211,6 +211,8 @@ def stars(items: str = Query(..., max_length=2000)):
             map_id, mods = (int(x) for x in part.split(":", 1))
         except ValueError:
             raise HTTPException(400, "zły format, oczekiwane map_id:mods")
+        if not (0 < map_id < 2_147_483_647 and 0 <= mods < 2**31):
+            raise HTTPException(400, "zły format, oczekiwane map_id:mods")
         key = (map_id, mods & _STAR_MODS)
         asked[f"{map_id}:{mods}"] = key
         if key not in wanted:
@@ -238,8 +240,10 @@ def stars(items: str = Query(..., max_length=2000)):
 
 
 from .calculator import router as calc_router  # noqa: E402
+from .web import router as web_router  # noqa: E402
 
 app.include_router(router, prefix="/hypo/api")
 app.include_router(router, prefix="/pp-lab/api")
 app.include_router(calc_router, prefix="/hypo/api")
 app.include_router(calc_router, prefix="/pp-lab/api")
+app.include_router(web_router)
