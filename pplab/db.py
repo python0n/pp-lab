@@ -48,6 +48,7 @@ def connect():
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=True,
+        connect_timeout=5,
     )
 
 
