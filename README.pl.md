@@ -58,6 +58,7 @@ zobacz `pp-lab-recalc.timer`). `pp-lab.service` uruchamia API przez systemd.
 | `COVER_URL` | okładki osu! | adres okładki, `{set_id}` jest podmieniane; puste = bez okładki |
 | `BASE_VARIANT` | `tsg` | formuła, z którą porównywane są pozostałe |
 | `API_EXTRA_PREFIX` | | API dostępne też pod tą ścieżką, np. starą, której używa jeszcze twoja strona |
+| `RELAX_PP` | `false` | `true` = RX w kalkulatorze, pp za relax z akatsuki-pp (tyle, ile bancho.py daje za wyniki na RX) |
 
 ## API
 
@@ -66,7 +67,8 @@ zobacz `pp-lab-recalc.timer`). `pp-lab.service` uruchamia API przez systemd.
     GET /pp-lab/api/calc/variants
 
 `mods` to skróty (`HDDT`) albo liczba. Bez `combo` liczony jest full combo. `mode` konwertuje mapy
-osu!standard na inne tryby. Reworki: `/pp-lab/api/variants`, `/players`, `/player`, `/scores`,
+osu!standard na inne tryby. Przy `RELAX_PP=true` `RX` w `mods` daje pp za relax (osu!standard, taiko
+i catch); wersję dla relaksu ma tylko formuła `tsg`, więc odpowiedź zawiera wtedy tylko ją. Reworki: `/pp-lab/api/variants`, `/players`, `/player`, `/scores`,
 `/stars` (zobacz `pplab/api.py`).
 
 ## Własny wygląd

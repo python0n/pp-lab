@@ -26,6 +26,9 @@ router = APIRouter()
 
 # formulas the calculator offers (all of them support every mode)
 CALC_VARIANTS = ["tsg", "osu_2026_07", "osu_2025_10"]
+# the only formula with a relax version (akatsuki-pp, the one bancho.py uses for relax scores)
+RELAX_VARIANT = "tsg"
+RX = 128
 
 MODS = {
     "NF": 1, "EZ": 2, "TD": 4, "HD": 8, "HR": 16, "SD": 32, "DT": 64, "RX": 128,
@@ -232,7 +235,10 @@ def calc(
     map_id = int(m.group(1))
     if not 0 < map_id < 2_147_483_647:
         raise HTTPException(400, "map id expected")
-    mod_bits = parse_mods(mods) & ~128  # relax has no pp formula here
+    mod_bits = parse_mods(mods)
+    # relax: only when RELAX_PP is on, and not in osu!mania (the game has no relax there)
+    if not config.RELAX_PP or mode == 3:
+        mod_bits &= ~RX
 
     key = json.dumps([map_id, mod_bits, mode, acc, n100, n50, miss, combo])
     with _cache_lock:
@@ -263,6 +269,12 @@ def _calculate(map_id: int, mod_bits: int, mode: int | None, acc: float | None,
     play_mode = map_mode if mode is None else mode
     if map_mode != 0 and play_mode != map_mode:
         raise HTTPException(400, "only osu!standard maps can be converted to other modes")
+    if play_mode == 3:
+        mod_bits &= ~RX
+    relax = bool(mod_bits & RX)
+    # with relax only the formula that has a relax version is calculated
+    variants = [RELAX_VARIANT] if relax else CALC_VARIANTS
+    base_variant = RELAX_VARIANT if relax else config.BASE_VARIANT
 
     base = {"map": str(path), "mode": play_mode, "mods": mod_bits}
     play = dict(base, id=0)
@@ -283,21 +295,21 @@ def _calculate(map_id: int, mod_bits: int, mode: int | None, acc: float | None,
         scores.append(dict(base, id=100 + i, acc=a))
     presets = MOD_PRESETS.get(play_mode, [""])
     for i, name in enumerate(presets):
-        scores.append(dict(base, id=200 + i, acc=100.0, mods=parse_mods(name)))
+        scores.append(dict(base, id=200 + i, acc=100.0, mods=parse_mods(name) | (RX if relax else 0)))
 
     results: dict[str, dict] = {}
     stars = max_combo = 0.0
-    for variant in CALC_VARIANTS:
+    for variant in variants:
         out = {r["id"]: r for r in _run(variant, scores)}
         p = out[0]
-        if variant == config.BASE_VARIANT:
+        if variant == base_variant:
             stars, max_combo = p["stars"], p["max_combo"]
         results[variant] = {
             "pp": _f(p["pp"]), "stars": _f(p["stars"]), "error": p["error"],
             "parts": {"aim": _f(p["aim"]), "speed": _f(p["speed"]), "acc": _f(p["acc"]),
                       "fl": _f(p["fl"]), "reading": _f(p["reading"])},
             "acc_table": [{"acc": a, "pp": _f(out[100 + i]["pp"])} for i, a in enumerate(ACC_PRESETS)],
-            "mod_table": [{"mods": mods_name(parse_mods(n)), "pp": _f(out[200 + i]["pp"]),
+            "mod_table": [{"mods": mods_name(parse_mods(n) | (RX if relax else 0)), "pp": _f(out[200 + i]["pp"]),
                            "stars": _f(out[200 + i]["stars"])} for i, n in enumerate(presets)],
         }
 
@@ -321,9 +333,10 @@ def _calculate(map_id: int, mod_bits: int, mode: int | None, acc: float | None,
     body = {
         "map": info,
         "play": {"mode": play_mode, "mods": mods_name(mod_bits), "mods_int": mod_bits, "acc": shown_acc,
-                 "n100": n100, "n50": n50, "miss": miss, "combo": combo if combo else int(max_combo)},
-        "base": config.BASE_VARIANT,
-        "variants": CALC_VARIANTS,
+                 "n100": n100, "n50": n50, "miss": miss, "combo": combo if combo else int(max_combo),
+                 "relax": relax},
+        "base": base_variant,
+        "variants": variants,
         "results": results,
     }
     return body
@@ -335,6 +348,7 @@ def calc_variants():
     meta = {v["id"]: v for v in json.loads((config.ROOT / "variants.json").read_text(encoding="utf-8"))}
     return {
         "base": config.BASE_VARIANT,
+        "relax": config.RELAX_PP,
         "variants": [
             {"id": v, "name": meta.get(v, {}).get("name", {"en": v}), "period": meta.get(v, {}).get("period", {})}
             for v in CALC_VARIANTS

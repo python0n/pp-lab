@@ -31,8 +31,8 @@
       footer: 'pp liczone przez rosu-pp i akatsuki-pp.', theme_toggle: 'Jasny / ciemny'
     }
   };
-  var MOD_ORDER = ['NF', 'EZ', 'HD', 'HR', 'DT', 'NC', 'HT', 'FL', 'SO'];
-  var EXCLUSIVE = { EZ: ['HR'], HR: ['EZ'], DT: ['HT', 'NC'], NC: ['HT', 'DT'], HT: ['DT', 'NC'], NF: ['SO'], SO: ['NF'] };
+  var MOD_ORDER = ['NF', 'EZ', 'HD', 'HR', 'DT', 'NC', 'HT', 'FL', 'SO', 'RX'];
+  var EXCLUSIVE = { EZ: ['HR'], HR: ['EZ'], DT: ['HT', 'NC'], NC: ['HT', 'DT'], HT: ['DT', 'NC'], NF: ['SO', 'RX'], SO: ['NF'], RX: ['NF'] };
   var MODES = ['osu!', 'osu!taiko', 'osu!catch', 'osu!mania'];
 
   var root = document.getElementById('pl-root');
@@ -73,6 +73,9 @@
 
   fetch('api/calc/variants').then(function (r) { return r.json(); }).then(function (d) {
     (d.variants || []).forEach(function (v) { state.names[v.id] = v.name || {}; });
+    // the RX button only when the server has RELAX_PP=true
+    var rx = document.querySelector('#pl-mods [data-mod="RX"]');
+    if (rx) rx.hidden = !d.relax;
     if (state.last) render(state.last);
   }).catch(function () {});
   function variantName(id) { var n = state.names[id]; return (n && (n[lang] || n.en)) || id; }

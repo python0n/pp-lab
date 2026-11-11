@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 
 const NIGHTCORE: u32 = 512;
 const DOUBLETIME: u32 = 64;
+const RELAX: u32 = 128;
 
 /// (id, modes, technical description)
 const VARIANTS: &[(&str, &[u8], &str)] = &[
@@ -118,8 +119,38 @@ fn mods_of(s: &ScoreInput) -> u32 {
 
 // ---------- bancho.py's formula (akatsuki-pp) ----------
 
+/// Relax on osu!standard: akatsuki-pp's osu_2019 formula, called the same way as
+/// akatsuki-pp-py (bancho.py's binding) does in `Calculator.performance()` for RX.
+fn calc_tsg_relax(map: &akatsuki_pp::Beatmap, s: &ScoreInput) -> ScoreOutput {
+    let mut pp = akatsuki_pp::osu_2019::OsuPP::new(map).mods(mods_of(s));
+    if let Some(c) = s.combo {
+        pp = pp.combo(c as usize);
+    }
+    if s.acc.is_none() {
+        if let Some(n) = s.n300 {
+            pp = pp.n300(n as usize);
+        }
+        pp = pp.n100(s.n100 as usize).n50(s.n50 as usize);
+    }
+    pp = pp.misses(s.nmiss as usize);
+    if let Some(a) = s.acc {
+        pp = pp.accuracy(a as f32);
+    }
+    let r = pp.calculate();
+    let mut o = out(s.id, r.pp, r.difficulty.stars);
+    o.max_combo = r.difficulty.max_combo as u32;
+    o.aim = clean(r.pp_aim);
+    o.speed = clean(r.pp_speed);
+    o.acc = clean(r.pp_acc);
+    o.fl = clean(r.pp_flashlight);
+    o
+}
+
 fn calc_tsg(map: &akatsuki_pp::Beatmap, s: &ScoreInput) -> ScoreOutput {
     use akatsuki_pp::{AnyPP, GameMode, PerformanceAttributes};
+    if s.mode == 0 && mods_of(s) & RELAX != 0 {
+        return calc_tsg_relax(map, s);
+    }
     let mode = match s.mode {
         1 => GameMode::Taiko,
         2 => GameMode::Catch,

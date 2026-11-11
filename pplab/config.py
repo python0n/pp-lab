@@ -52,5 +52,8 @@ MAPS_CACHE_MAX_FILES = int(os.environ.get("MAPS_CACHE_MAX_FILES", "5000"))
 SITE_NAME = os.environ.get("SITE_NAME", "pp-lab")
 SITE_LOGO = os.environ.get("SITE_LOGO", "")
 THEME_CSS = os.environ.get("THEME_CSS", "")
+# relax (RX) in the calculator: the formula from akatsuki-pp that bancho.py uses for relax scores.
+# Only the "tsg" formula has a relax version, so with RX the calculator shows that one alone.
+RELAX_PP = os.environ.get("RELAX_PP", "false").strip().lower() in ("1", "true", "yes", "on")
 # beatmap covers; {set_id} is replaced, empty = no cover
 COVER_URL = os.environ.get("COVER_URL", "https://assets.ppy.sh/beatmaps/{set_id}/covers/cover.jpg")

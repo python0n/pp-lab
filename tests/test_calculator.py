@@ -128,3 +128,29 @@ def test_rate_limit(client):
     codes = [client.get("/pp-lab/api/calc", params={"map": MAP_ID, "acc": 90 + i}).status_code for i in range(5)]
     config.CALC_RATE_PER_MINUTE = 1000
     assert codes[:3] == [200, 200, 200] and 429 in codes[3:]
+
+
+def test_relax_off_ignores_rx(client, monkeypatch):
+    import pplab.config as cfg
+    monkeypatch.setattr(cfg, "RELAX_PP", False)
+    d = calc(client, mods="RX")
+    assert d["play"]["mods"] == "NM" and not d["play"]["relax"]
+    assert d["variants"] == ["tsg", "osu_2026_07", "osu_2025_10"]
+    assert client.get("/pp-lab/api/calc/variants").json()["relax"] is False
+
+
+def test_relax_on(client, monkeypatch):
+    import pplab.config as cfg
+    monkeypatch.setattr(cfg, "RELAX_PP", True)
+    assert client.get("/pp-lab/api/calc/variants").json()["relax"] is True
+    nm = calc(client)["results"]["tsg"]["pp"]
+    d = calc(client, mods="HDRX")
+    assert d["play"]["relax"] and d["play"]["mods"] == "HDRX"
+    # only the formula with a relax version, and it is the base one
+    assert d["variants"] == ["tsg"] and d["base"] == "tsg"
+    r = d["results"]["tsg"]
+    assert r["error"] is None and r["pp"] > 0 and r["pp"] != nm
+    assert all(row["mods"].endswith("RX") for row in r["mod_table"])
+    # osu!mania has no relax: RX is dropped
+    m = calc(client, mods="RX", mode=3)
+    assert not m["play"]["relax"] and len(m["variants"]) == 3

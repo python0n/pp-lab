@@ -59,6 +59,7 @@ enough, see `pp-lab-recalc.timer`). `pp-lab.service` runs the API with systemd.
 | `COVER_URL` | osu! covers | cover image address, `{set_id}` is replaced; empty = no cover |
 | `BASE_VARIANT` | `tsg` | the formula other ones are compared with |
 | `API_EXTRA_PREFIX` | | serve the API also under this path, e.g. an old one your site still uses |
+| `RELAX_PP` | `false` | `true` = RX in the calculator, relax pp from akatsuki-pp (what bancho.py gives relax scores) |
 
 ## API
 
@@ -67,7 +68,9 @@ enough, see `pp-lab-recalc.timer`). `pp-lab.service` runs the API with systemd.
     GET /pp-lab/api/calc/variants
 
 `mods` is acronyms (`HDDT`) or the number. Without `combo` a full combo is calculated. `mode`
-converts osu!standard maps to other modes. Reworks: `/pp-lab/api/variants`, `/players`, `/player`,
+converts osu!standard maps to other modes. With `RELAX_PP=true`, `RX` in `mods` gives relax pp
+(osu!standard, taiko and catch); only the `tsg` formula has a relax version, so the answer then has that
+one alone. Reworks: `/pp-lab/api/variants`, `/players`, `/player`,
 `/scores`, `/stars` (see `pplab/api.py`).
 
 ## Customizing
